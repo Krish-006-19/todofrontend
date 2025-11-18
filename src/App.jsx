@@ -10,7 +10,7 @@ export default function App() {
   const [view, setView] = useState('login')
 
   useEffect(() => {
-    if (user) loadTodos()
+    if (user) loadTodos(user.id || user._id)
   }, [user])
 
   async function doLogin(creds) {
@@ -33,9 +33,9 @@ export default function App() {
     }
   }
 
-  async function loadTodos() {
+  async function loadTodos(userId) {
     try {
-      const res = await fetchTodos()
+      const res = await fetchTodos(userId)
       setTodos(res.todo || [])
     } catch (err) {
       console.error(err)
@@ -46,14 +46,14 @@ export default function App() {
   async function handleAdd(payload) {
     try {
       await addTodo(payload)
-      loadTodos()
+      loadTodos(user?.id || user?._id)
     } catch (err) { alert(err.msg || 'Add failed') }
   }
 
   async function handleUpdate(id, subid, payload) {
     try {
       await updateTodo(id, subid, payload)
-      loadTodos()
+      loadTodos(user?.id || user?._id)
     } catch (err) { alert(err.msg || 'Update failed') }
   }
 
@@ -61,7 +61,7 @@ export default function App() {
     if (!confirm('Delete this todo?')) return
     try {
       await deleteTodo(_id)
-      loadTodos()
+      loadTodos(user?.id || user?._id)
     } catch (err) { alert(err.msg || 'Delete failed') }
   }
 

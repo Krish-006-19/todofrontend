@@ -13,7 +13,10 @@ async function request(path, options = {}) {
 
 export const register = (payload) => request('/register', { method: 'POST', body: JSON.stringify(payload) })
 export const login = (payload) => request('/login', { method: 'POST', body: JSON.stringify(payload) })
-export const fetchTodos = () => request('/todo', { method: 'GET' })
+export const fetchTodos = (userId) => {
+  if (!userId) return Promise.resolve({ todo: [] })
+  return request(`/todo/${userId}`, { method: 'GET' })
+}
 export const addTodo = (payload) => request('/todo', { method: 'POST', body: JSON.stringify(payload) })
 export const updateTodo = (id, subid, payload) => request(`/todo/${id}/${subid}`, { method: 'PATCH', body: JSON.stringify(payload) })
 export const deleteTodo = (_id) => request(`/todo/${_id}`, { method: 'DELETE' })
