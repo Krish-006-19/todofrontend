@@ -1,22 +1,23 @@
+import axios from 'axios'
+
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
-async function request(path, options = {}) {
-  const res = await fetch(API_BASE + path, {
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
-    ...options,
-  })
-  const data = await res.json().catch(() => ({}))
-  if (!res.ok) throw { status: res.status, ...data }
-  return data
+const client = axios.create({
+  baseURL: API_BASE,
+  withCredentials: true,
+  headers: { 'Content-Type': 'application/json' },
+})
+
+function unwrap(res) {
+  return res.data
 }
 
-export const register = (payload) => request('/register', { method: 'POST', body: JSON.stringify(payload) })
-export const login = (payload) => request('/login', { method: 'POST', body: JSON.stringify(payload) })
+export const register = (payload) => client.post('/register', payload).then(unwrap)
+export const login = (payload) => client.post('/login', payload).then(unwrap)
 export const fetchTodos = (userId) => {
   if (!userId) return Promise.resolve({ todo: [] })
-  return request(`/todo/${userId}`, { method: 'GET' })
+  return client.get(`/todo/${userId}`).then(unwrap)
 }
-export const addTodo = (payload) => request('/todo', { method: 'POST', body: JSON.stringify(payload) })
-export const updateTodo = (id, subid, payload) => request(`/todo/${id}/${subid}`, { method: 'PATCH', body: JSON.stringify(payload) })
-export const deleteTodo = (_id) => request(`/todo/${_id}`, { method: 'DELETE' })
+export const addTodo = (payload) => client.post('/todo', payload).then(unwrap)
+export const updateTodo = (id, subid, payload) => client.patch(`/todo/${id}/${subid}`, payload).then(unwrap)
+export const deleteTodo = (_id) => client.delete(`/${_id}`).then(unwrap)
