@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { login, register, fetchTodos, addTodo, updateTodo, deleteTodo } from './api'
 import Login from './components/Login'
 import Register from './components/Register'
@@ -8,10 +8,33 @@ export default function App() {
   const [user, setUser] = useState(null)
   const [todos, setTodos] = useState([])
   const [view, setView] = useState('login')
+  const rootRef = useRef()
 
   useEffect(() => {
     if (user) loadTodos(user.id || user._id)
   }, [user])
+
+  useEffect(() => {
+    // set sensible defaults
+    document.documentElement.style.setProperty('--mx', '50')
+    document.documentElement.style.setProperty('--my', '50')
+  }, [])
+
+  function handleMouseMove(e) {
+    const el = rootRef.current || document.documentElement
+    const rect = el.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const y = e.clientY - rect.top
+    const px = Math.max(0, Math.min(100, Math.round((x / rect.width) * 100)))
+    const py = Math.max(0, Math.min(100, Math.round((y / rect.height) * 100)))
+    document.documentElement.style.setProperty('--mx', String(px))
+    document.documentElement.style.setProperty('--my', String(py))
+  }
+
+  function handleMouseLeave() {
+    document.documentElement.style.setProperty('--mx', '50')
+    document.documentElement.style.setProperty('--my', '50')
+  }
 
   async function doLogin(creds) {
     try {
@@ -66,9 +89,14 @@ export default function App() {
   }
 
   return (
-    <div className="app-root">
+    <div className="app-root" ref={rootRef} onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}>
+      <div className="bg-layer" aria-hidden="true">
+        <div className="blob b1" />
+        <div className="blob b2" />
+        <div className="blob b3" />
+      </div>
       <header className="topbar">
-        <h1>Sunrise Todos</h1>
+        <h1><span className="logo-badge">SD</span>Sunrise Todos</h1>
         <div className="user-area">
           {user ? <span>Hi, {user.first_name}</span> : null}
           {user ? <button onClick={() => { setUser(null); setTodos([]); setView('login') }} className="btn small">Logout</button> : null}

@@ -18,7 +18,7 @@ export default function TodoItem({ todo, parentId, onUpdate, onDelete }) {
         <>
           <div className="row between">
             <h3>{title}</h3>
-            <div className="pill">{priority}</div>
+            <div className={`pill priority-${priority}`}>{priority}</div>
           </div>
           <p className="muted">{description}</p>
           <div className="row">
