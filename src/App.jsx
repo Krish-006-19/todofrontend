@@ -38,11 +38,20 @@ export default function App() {
 
   async function doLogin(creds) {
     try {
+      console.log('Logging in with', creds)
       const data = await login(creds)
+      console.log('Login response', data)
+      if (!data || !data.user) {
+        console.error('No user in login response', data)
+        alert((data && data.msg) || 'Login failed: invalid response')
+        return
+      }
       setUser(data.user)
       setView('todos')
     } catch (err) {
-      alert(err.msg || 'Login failed')
+      console.error('Login error', err)
+      const message = err?.response?.data?.msg || err?.message || 'Login failed'
+      alert(message)
     }
   }
 
