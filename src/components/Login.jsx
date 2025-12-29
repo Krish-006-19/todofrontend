@@ -1,25 +1,48 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
+import { login, fetchTodos } from './api'
 
-export default function Login({ onLogin, onSwitch }) {
+function LoginComponent() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [user, setUser] = useState(null)
 
-  function submit(e) {
+  const handleLogin = async (e) => {
     e.preventDefault()
-    onLogin({ email, password })
+    
+    try {
+      console.log('Logging in with', { email, password })
+      
+      // ✅ Login and get user data
+      const response = await login({ email, password })
+      console.log('Login response', response)
+      
+      // ✅ IMPORTANT: Set user state
+      setUser(response.user)
+      
+      // ✅ NOW fetch todos (token is already in localStorage)
+      const todos = await fetchTodos(response.user._id)
+      console.log('Fetched todos:', todos)
+      
+    } catch (error) {
+      console.error('Login failed:', error)
+    }
   }
 
   return (
-    <div className="card auth-card">
-      <h2>Welcome Back</h2>
-      <form onSubmit={submit} className="stack">
-        <input placeholder="Email" type="email" value={email} onChange={e => setEmail(e.target.value)} required />
-        <input placeholder="Password" type="password" value={password} onChange={e => setPassword(e.target.value)} required />
-        <div className="row">
-          <button type='submit' className="btn">Login</button>
-          <button type="button" className="btn secondary" onClick={onSwitch}>Register</button>
-        </div>
-      </form>
-    </div>
+    <form onSubmit={handleLogin}>
+      <input 
+        type="email" 
+        value={email} 
+        onChange={(e) => setEmail(e.target.value)} 
+        placeholder="Email"
+      />
+      <input 
+        type="password" 
+        value={password} 
+        onChange={(e) => setPassword(e.target.value)} 
+        placeholder="Password"
+      />
+      <button type="submit">Login</button>
+    </form>
   )
 }
