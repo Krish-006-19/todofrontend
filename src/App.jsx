@@ -1,197 +1,126 @@
-// import React, { useEffect, useState, useRef } from 'react'
-// import { login, register, fetchTodos, addTodo, updateTodo, deleteTodo } from './api'
-// import Login from './components/Login'
-// import Register from './components/Register'
-// import TodoList from './components/TodoList'
+import React, { useEffect, useState, useRef } from 'react'
+import { login, register, fetchTodos, addTodo, updateTodo, deleteTodo } from './api'
+import Login from './components/Login'
+import Register from './components/Register'
+import TodoList from './components/TodoList'
 
-// export default function App() {
-//   const [user, setUser] = useState(null)
-//   const [todos, setTodos] = useState([])
-//   const [view, setView] = useState('login')
-//   const rootRef = useRef()
-
-//   useEffect(() => {
-//     if (user) loadTodos(user.id || user._id)
-//   }, [user])
-
-//   useEffect(() => {
-//     // set sensible defaults
-//     document.documentElement.style.setProperty('--mx', '50')
-//     document.documentElement.style.setProperty('--my', '50')
-//   }, [])
-
-//   function handleMouseMove(e) {
-//     const el = rootRef.current || document.documentElement
-//     const rect = el.getBoundingClientRect()
-//     const x = e.clientX - rect.left
-//     const y = e.clientY - rect.top
-//     const px = Math.max(0, Math.min(100, Math.round((x / rect.width) * 100)))
-//     const py = Math.max(0, Math.min(100, Math.round((y / rect.height) * 100)))
-//     document.documentElement.style.setProperty('--mx', String(px))
-//     document.documentElement.style.setProperty('--my', String(py))
-//   }
-
-//   function handleMouseLeave() {
-//     document.documentElement.style.setProperty('--mx', '50')
-//     document.documentElement.style.setProperty('--my', '50')
-//   }
-
-//   async function doLogin(creds) {
-//     try {
-//       console.log('Logging in with', creds)
-//       const data = await login(creds)
-//       console.log('Login response', data)
-//       if (!data || !data.user) {
-//         console.error('No user in login response', data)
-//         alert((data && data.msg) || 'Login failed: invalid response')
-//         return
-//       }
-//       setUser(data.user)
-//       setView('todos')
-//     } catch (err) {
-//       console.error('Login error', err)
-//       const message = err?.response?.data?.msg || err?.message || 'Login failed'
-//       alert(message)
-//     }
-//   }
-
-//   async function doRegister(creds) {
-//     try {
-//       await register(creds)
-//       alert('Registered — please log in')
-//       setView('login')
-//     } catch (err) {
-//       alert(err.msg || 'Register failed')
-//     }
-//   }
-
-//   async function loadTodos(userId) {
-//     try {
-//       const res = await fetchTodos(userId)
-//       setTodos(res.todo || [])
-//     } catch (err) {
-//       console.error(err)
-//       setTodos([])
-//     }
-//   }
-
-//   async function handleAdd(payload) {
-//     try {
-//       await addTodo(payload)
-//       loadTodos(user?.id || user?._id)
-//     } catch (err) { alert(err.msg || 'Add failed') }
-//   }
-
-//   async function handleUpdate(id, subid, payload) {
-//     try {
-//       await updateTodo(id, subid, payload)
-//       loadTodos(user?.id || user?._id)
-//     } catch (err) { alert(err.msg || 'Update failed') }
-//   }
-
-//   async function handleDelete(_id) {
-//     if (!confirm('Delete this todo?')) return
-//     try {
-//       await deleteTodo(_id)
-//       loadTodos(user?.id || user?._id)
-//     } catch (err) { alert(err.msg || 'Delete failed') }
-//   }
-
-//   return (
-//     <div className="app-root" ref={rootRef} onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}>
-//       <div className="bg-layer" aria-hidden="true">
-//         <div className="blob b1" />
-//         <div className="blob b2" />
-//         <div className="blob b3" />
-//       </div>
-//       <header className="topbar">
-//         <h1><span className="logo-badge">SD</span>Sunrise Todos</h1>
-//         <div className="user-area">
-//           {user ? <span>Hi, {user.first_name}</span> : null}
-//           {user ? <button onClick={() => { setUser(null); setTodos([]); setView('login') }} className="btn small">Logout</button> : null}
-//         </div>
-//       </header>
-
-//       <main className="container">
-//         {!user && view === 'login' && <Login onLogin={doLogin} onSwitch={() => setView('register')} />}
-//         {!user && view === 'register' && <Register onRegister={doRegister} onSwitch={() => setView('login')} />}
-//         {user && <TodoList todos={todos} onAdd={handleAdd} onUpdate={handleUpdate} onDelete={handleDelete} />}
-
-//         {!user && (
-//           <footer className="help">Tip: register then login. Backend cookies are used for auth.</footer>
-//         )}
-//       </main>
-//     </div>
-//   )
-// }
-import { useEffect, useState } from 'react'
-import { fetchTodos } from './api'
-
-function App() {
+export default function App() {
   const [user, setUser] = useState(null)
   const [todos, setTodos] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [view, setView] = useState('login')
+  const rootRef = useRef()
 
-  // ✅ Check if user is logged in on page load/refresh
   useEffect(() => {
-    const token = localStorage.getItem('accessToken')
-    
-    if (token) {
-      // Decode the token to get user ID
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]))
-        const userId = payload.id
-        
-        // Fetch user's todos
-        fetchTodos(userId)
-          .then(data => {
-            setTodos(data.todo || [])
-            setUser({ _id: userId }) // Set minimal user info
-            setLoading(false)
-          })
-          .catch(err => {
-            console.error('Failed to load todos:', err)
-            // Token might be expired, clear it
-            localStorage.removeItem('accessToken')
-            setLoading(false)
-          })
-      } catch (e) {
-        console.error('Invalid token:', e)
-        localStorage.removeItem('accessToken')
-        setLoading(false)
-      }
-    } else {
-      setLoading(false)
-    }
+    if (user) loadTodos(user.id || user._id)
+  }, [user])
+
+  useEffect(() => {
+    // set sensible defaults
+    document.documentElement.style.setProperty('--mx', '50')
+    document.documentElement.style.setProperty('--my', '50')
   }, [])
 
-  const handleLogin = async (email, password) => {
-    const response = await login({ email, password })
-    setUser(response.user)
-    
-    const todosData = await fetchTodos(response.user._id)
-    setTodos(todosData.todo || [])
+  function handleMouseMove(e) {
+    const el = rootRef.current || document.documentElement
+    const rect = el.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const y = e.clientY - rect.top
+    const px = Math.max(0, Math.min(100, Math.round((x / rect.width) * 100)))
+    const py = Math.max(0, Math.min(100, Math.round((y / rect.height) * 100)))
+    document.documentElement.style.setProperty('--mx', String(px))
+    document.documentElement.style.setProperty('--my', String(py))
   }
 
-  const handleLogout = () => {
-    localStorage.removeItem('accessToken')
-    setUser(null)
-    setTodos([])
+  function handleMouseLeave() {
+    document.documentElement.style.setProperty('--mx', '50')
+    document.documentElement.style.setProperty('--my', '50')
   }
 
-  if (loading) {
-    return <div>Loading...</div>
+  async function doLogin(creds) {
+    try {
+      console.log('Logging in with', creds)
+      const data = await login(creds)
+      console.log('Login response', data)
+      if (!data || !data.user) {
+        console.error('No user in login response', data)
+        alert((data && data.msg) || 'Login failed: invalid response')
+        return
+      }
+      setUser(data.user)
+      setView('todos')
+    } catch (err) {
+      console.error('Login error', err)
+      const message = err?.response?.data?.msg || err?.message || 'Login failed'
+      alert(message)
+    }
   }
 
-  if (!user) {
-    return <LoginForm onLogin={handleLogin} />
+  async function doRegister(creds) {
+    try {
+      await register(creds)
+      alert('Registered — please log in')
+      setView('login')
+    } catch (err) {
+      alert(err.msg || 'Register failed')
+    }
+  }
+
+  async function loadTodos(userId) {
+    try {
+      const res = await fetchTodos(userId)
+      setTodos(res.todo || [])
+    } catch (err) {
+      console.error(err)
+      setTodos([])
+    }
+  }
+
+  async function handleAdd(payload) {
+    try {
+      await addTodo(payload)
+      loadTodos(user?.id || user?._id)
+    } catch (err) { alert(err.msg || 'Add failed') }
+  }
+
+  async function handleUpdate(id, subid, payload) {
+    try {
+      await updateTodo(id, subid, payload)
+      loadTodos(user?.id || user?._id)
+    } catch (err) { alert(err.msg || 'Update failed') }
+  }
+
+  async function handleDelete(_id) {
+    if (!confirm('Delete this todo?')) return
+    try {
+      await deleteTodo(_id)
+      loadTodos(user?.id || user?._id)
+    } catch (err) { alert(err.msg || 'Delete failed') }
   }
 
   return (
-    <div>
-      <h1>Welcome back!</h1>
-      <button onClick={handleLogout}>Logout</button>
-      <TodoList todos={todos} />
+    <div className="app-root" ref={rootRef} onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}>
+      <div className="bg-layer" aria-hidden="true">
+        <div className="blob b1" />
+        <div className="blob b2" />
+        <div className="blob b3" />
+      </div>
+      <header className="topbar">
+        <h1><span className="logo-badge">SD</span>Sunrise Todos</h1>
+        <div className="user-area">
+          {user ? <span>Hi, {user.first_name}</span> : null}
+          {user ? <button onClick={() => { setUser(null); setTodos([]); setView('login') }} className="btn small">Logout</button> : null}
+        </div>
+      </header>
+
+      <main className="container">
+        {!user && view === 'login' && <Login onLogin={doLogin} onSwitch={() => setView('register')} />}
+        {!user && view === 'register' && <Register onRegister={doRegister} onSwitch={() => setView('login')} />}
+        {user && <TodoList todos={todos} onAdd={handleAdd} onUpdate={handleUpdate} onDelete={handleDelete} />}
+
+        {!user && (
+          <footer className="help">Tip: register then login. Backend cookies are used for auth.</footer>
+        )}
+      </main>
     </div>
   )
 }
